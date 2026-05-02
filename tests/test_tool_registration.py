@@ -90,3 +90,52 @@ def test_reporting_tools_registered():
         "intune_get_audit_events", "intune_get_endpoint_analytics",
     }
     assert expected.issubset(fake.tools.keys())
+
+
+def test_scripts_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.scripts.scripts_tools import _register
+    _register(fake)
+    expected = {"intune_list_remediations", "intune_get_remediation_run_state", "intune_request_remediation_run"}
+    assert expected.issubset(fake.tools.keys())
+
+
+def test_updates_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.updates.updates_tools import _register
+    _register(fake)
+    expected = {
+        "intune_list_update_rings", "intune_get_update_ring",
+        "intune_list_feature_update_profiles", "intune_list_quality_update_profiles",
+        "intune_list_driver_update_profiles",
+    }
+    assert expected.issubset(fake.tools.keys())
+
+
+def test_autopilot_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.autopilot.autopilot_tools import _register
+    _register(fake)
+    expected = {"intune_list_autopilot_devices", "intune_get_autopilot_device_by_serial", "intune_import_autopilot_device"}
+    assert expected.issubset(fake.tools.keys())

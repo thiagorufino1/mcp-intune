@@ -7,7 +7,8 @@ import structlog
 
 from mcp_intune.graph.client import _get_http_client
 from mcp_intune.logging_config import configure_logging
-from mcp_intune.tools.device import device_tools
+from mcp_intune.tools.device import device_tools, action_tools
+from mcp_intune.tools.reporting import reporting_tools
 
 configure_logging()
 logger = structlog.get_logger()
@@ -27,6 +28,8 @@ async def _lifespan(server: fastmcp.FastMCP) -> AsyncGenerator[None, None]:
 
 mcp = fastmcp.FastMCP("mcp-intune", lifespan=_lifespan)
 device_tools._register(mcp)
+action_tools._register(mcp)
+reporting_tools._register(mcp)
 
 
 def main() -> None:

@@ -9,6 +9,9 @@ from mcp_intune.graph.client import _get_http_client
 from mcp_intune.logging_config import configure_logging
 from mcp_intune.tools.device import device_tools, action_tools
 from mcp_intune.tools.reporting import reporting_tools
+from mcp_intune.tools.scripts import scripts_tools
+from mcp_intune.tools.updates import updates_tools
+from mcp_intune.tools.autopilot import autopilot_tools
 
 configure_logging()
 logger = structlog.get_logger()
@@ -30,6 +33,9 @@ mcp = fastmcp.FastMCP("mcp-intune", lifespan=_lifespan)
 device_tools._register(mcp)
 action_tools._register(mcp)
 reporting_tools._register(mcp)
+scripts_tools._register(mcp)
+updates_tools._register(mcp)
+autopilot_tools._register(mcp)
 
 
 def main() -> None:

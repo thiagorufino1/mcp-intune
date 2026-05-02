@@ -33,6 +33,29 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## 2026-05-02 — V2b: Scripts, Atualizações e Autopilot
+
+### Added
+
+- **Remediações proativas (beta)**
+  - `intune_list_remediations`, `intune_get_remediation_run_state`
+  - `intune_request_remediation_run` — execução on-demand com approval workflow
+
+- **Update rings (v1.0)**
+  - `intune_list_update_rings`, `intune_get_update_ring` (com assignments)
+
+- **Update profiles (beta)**
+  - `intune_list_feature_update_profiles`, `intune_list_quality_update_profiles`, `intune_list_driver_update_profiles`
+
+- **Autopilot**
+  - `intune_list_autopilot_devices`, `intune_get_autopilot_device_by_serial`, `intune_import_autopilot_device`
+
+### Changed
+
+- **Total de tools expostas: 34** (era 23 na V2)
+
+---
+
 ## 2026-05-02
 
 ### Added

@@ -50,7 +50,7 @@ O projeto segue uma arquitetura em camadas, pensada para modularidade, clareza e
 ## 🛠️ Referência de Ferramentas
 
 Todas as ferramentas são apenas de **leitura** na V1.  
-Total atual: **23 ferramentas**.
+Total atual: **34 ferramentas**.
 
 ### 💻 Dispositivos
 
@@ -89,6 +89,26 @@ Total atual: **23 ferramentas**.
 - **`intune_list_report_catalog`**: lista relatórios disponíveis para `intune_export_report`.
 - **`intune_get_audit_events`**: eventos de auditoria — quem fez o quê, quando. Filtra por ator, categoria e período.
 - **`intune_get_endpoint_analytics`**: scores de Endpoint Analytics (startup, app reliability, work from anywhere).
+
+### 🔧 Remediações (Proativas)
+
+- **`intune_list_remediations`**: lista scripts de remediação proativa (deviceHealthScripts). Requer `ALLOW_BETA_APIS=true`.
+- **`intune_get_remediation_run_state`**: estado de execução de um script por dispositivo. Requer `ALLOW_BETA_APIS=true`.
+- **`intune_request_remediation_run`**: execução on-demand de remediação. **Requer aprovação** + `ALLOW_BETA_APIS=true`.
+
+### 🔄 Atualizações Windows
+
+- **`intune_list_update_rings`**: lista update rings WUfB com deferral e pause status (v1.0).
+- **`intune_get_update_ring`**: detalhes de um ring com grupos atribuídos (v1.0).
+- **`intune_list_feature_update_profiles`**: perfis de versão alvo de feature update. Requer `ALLOW_BETA_APIS=true`.
+- **`intune_list_quality_update_profiles`**: perfis de patch mensal. Requer `ALLOW_BETA_APIS=true`.
+- **`intune_list_driver_update_profiles`**: perfis de atualização de drivers. Requer `ALLOW_BETA_APIS=true`.
+
+### 🚀 Autopilot
+
+- **`intune_list_autopilot_devices`**: lista identidades Autopilot com status de atribuição de perfil.
+- **`intune_get_autopilot_device_by_serial`**: encontra dispositivo Autopilot por número de série.
+- **`intune_import_autopilot_device`**: importa novo dispositivo para Autopilot via hardware hash.
 
 ## 💻 Stack Tecnológica
 
@@ -166,6 +186,8 @@ Permissões de aplicativo necessárias:
 | `DeviceManagementManagedDevices.ReadWrite.All` | ExportJobs e relatórios |
 | `DeviceManagementApps.Read.All` | Eventos de auditoria |
 | `DeviceManagementManagedDevices.PrivilegedOperations.All` | Ações remotas (retire, wipe) |
+| `DeviceManagementScripts.Read.All` | Scripts e remediações |
+| `DeviceManagementServiceConfig.Read.All` | Autopilot |
 
 ## ⚠️ Limitações Conhecidas
 

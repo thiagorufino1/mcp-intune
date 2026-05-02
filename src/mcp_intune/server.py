@@ -1,0 +1,43 @@
+import os
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
+import fastmcp
+import structlog
+
+from mcp_intune.graph.client import _get_http_client
+from mcp_intune.logging_config import configure_logging
+from mcp_intune.tools.device import device_tools
+
+configure_logging()
+logger = structlog.get_logger()
+
+
+@asynccontextmanager
+async def _lifespan(server: fastmcp.FastMCP) -> AsyncGenerator[None, None]:
+    logger.info("server_starting", transport=os.getenv("FASTMCP_TRANSPORT", "http"))
+    yield
+    client = _get_http_client()
+    try:
+        await client.aclose()
+    except Exception:
+        pass
+    logger.info("server_stopped")
+
+
+mcp = fastmcp.FastMCP("mcp-intune", lifespan=_lifespan)
+device_tools._register(mcp)
+
+
+def main() -> None:
+    transport = os.getenv("FASTMCP_TRANSPORT", "http")
+    host = os.getenv("FASTMCP_HOST", "127.0.0.1")
+    port = int(os.getenv("FASTMCP_PORT", "8000"))
+    if transport == "http":
+        mcp.run(transport=transport, host=host, port=port)
+    else:
+        mcp.run(transport=transport)
+
+
+if __name__ == "__main__":
+    main()

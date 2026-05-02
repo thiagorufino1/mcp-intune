@@ -139,3 +139,52 @@ def test_autopilot_tools_registered():
     _register(fake)
     expected = {"intune_list_autopilot_devices", "intune_get_autopilot_device_by_serial", "intune_import_autopilot_device"}
     assert expected.issubset(fake.tools.keys())
+
+
+def test_governance_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.governance.governance_tools import _register
+    _register(fake)
+    expected = {
+        "intune_get_laps_metadata", "intune_request_laps_secret", "intune_execute_laps_secret",
+        "intune_find_bitlocker_keys", "intune_request_bitlocker_key", "intune_execute_bitlocker_key",
+        "intune_list_role_definitions", "intune_list_role_assignments",
+    }
+    assert expected.issubset(fake.tools.keys())
+
+
+def test_autopatch_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.autopatch.autopatch_tools import _register
+    _register(fake)
+    expected = {"intune_list_autopatch_deployments", "intune_get_autopatch_deployment", "intune_list_updatable_assets"}
+    assert expected.issubset(fake.tools.keys())
+
+
+def test_bulk_tools_registered():
+    class FakeMCP:
+        def __init__(self): self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+    fake = FakeMCP()
+    from mcp_intune.tools.device.bulk_tools import _register
+    _register(fake)
+    expected = {"intune_bulk_sync", "intune_bulk_restart"}
+    assert expected.issubset(fake.tools.keys())

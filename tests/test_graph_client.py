@@ -1,7 +1,7 @@
 import pytest
 import respx
 import httpx
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, AsyncMock
 
 
 DEVICE_URL = "https://graph.microsoft.com/v1.0/deviceManagement/managedDevices/abc-123"
@@ -122,3 +122,34 @@ def test_build_batch_rejects_21_requests():
     requests = [{"id": str(i), "method": "GET", "url": f"/v1.0/test/{i}"} for i in range(21)]
     with pytest.raises(ValueError, match="20"):
         build_batch(requests)
+
+
+# --- _do_request with 204 No Content ---
+
+@pytest.mark.asyncio
+async def test_do_request_handles_204_no_content(mock_token):
+    """Action endpoints like syncDevice return 204 with empty body."""
+    with patch("mcp_intune.graph.client._get_http_client") as mock_client_fn:
+        mock_resp = MagicMock()
+        mock_resp.status_code = 204
+        mock_resp.content = b""
+        mock_resp.headers = {}
+        mock_resp.url = "https://graph.microsoft.com/v1.0/test"
+        mock_client_fn.return_value.request = AsyncMock(return_value=mock_resp)
+        from mcp_intune.graph.client import _do_request
+        result = await _do_request("POST", "https://graph.microsoft.com/v1.0/test")
+        assert result == {}
+
+
+# --- graph_delete ---
+
+@pytest.mark.asyncio
+async def test_graph_delete_calls_delete_method():
+    with patch("mcp_intune.graph.client._do_request", new_callable=AsyncMock) as mock_req:
+        mock_req.return_value = {}
+        from mcp_intune.graph.client import graph_delete
+        await graph_delete("v1.0/deviceManagement/managedDevices/abc-123")
+        mock_req.assert_called_once()
+        call_args = mock_req.call_args
+        assert call_args[0][0] == "DELETE"
+        assert "abc-123" in call_args[0][1]

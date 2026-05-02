@@ -115,6 +115,8 @@ async def _do_request(method: str, url: str, json: Any = None, params: dict[str,
     elapsed_ms = int((time.monotonic() - start) * 1000)
     logger.debug("graph_request", method=method, status=response.status_code, elapsed_ms=elapsed_ms)
     _raise_for_status(response)
+    if response.status_code == 204 or not response.content:
+        return {}
     return response.json()
 
 
@@ -184,6 +186,12 @@ async def graph_post(path: str, body: dict[str, Any]) -> Any:
     _assert_beta_allowed(path)
     url = f"{GRAPH_BASE}/{path.lstrip('/')}"
     return await _do_request("POST", url, json=body)
+
+
+async def graph_delete(path: str) -> None:
+    _assert_beta_allowed(path)
+    url = f"{GRAPH_BASE}/{path.lstrip('/')}"
+    await _do_request("DELETE", url)
 
 
 def build_batch(requests_list: list[dict[str, Any]]) -> dict[str, Any]:

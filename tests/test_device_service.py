@@ -101,6 +101,17 @@ async def test_get_detected_apps_returns_all_pages():
 
 
 @pytest.mark.asyncio
+async def test_get_device_overview_returns_device_with_defaults():
+    with patch("mcp_intune.services.device.device_service.graph_get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = DEVICE_STUB
+        from mcp_intune.services.device.device_service import get_device_overview
+        result = await get_device_overview("abc-123")
+        assert result["device"]["deviceName"] == "LAP-001"
+        # default include fetches users + compliance_states
+        assert "users" in result or "compliance_states" in result
+
+
+@pytest.mark.asyncio
 async def test_get_compliance_state_returns_device_and_policy_states():
     with patch("mcp_intune.services.device.device_service.graph_get", new_callable=AsyncMock) as mock_get:
         mock_get.side_effect = [DEVICE_STUB, COMPLIANCE_STATES_STUB]

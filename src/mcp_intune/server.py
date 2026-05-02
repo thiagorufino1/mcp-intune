@@ -20,8 +20,8 @@ async def _lifespan(server: fastmcp.FastMCP) -> AsyncGenerator[None, None]:
     client = _get_http_client()
     try:
         await client.aclose()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("http_client_close_error", error=str(exc))
     logger.info("server_stopped")
 
 

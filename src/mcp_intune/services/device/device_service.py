@@ -27,8 +27,9 @@ async def search_devices(
     compliance_state: str | None = None,
     top: int | None = None,
 ) -> dict[str, Any]:
+    safe_query = query.replace("'", "''")  # OData single-quote escaping
     filter_parts = [
-        f"(startswith(deviceName,'{query}') or serialNumber eq '{query}' or userPrincipalName eq '{query}')"
+        f"(startswith(deviceName,'{safe_query}') or serialNumber eq '{safe_query}' or userPrincipalName eq '{safe_query}')"
     ]
     if platform:
         filter_parts.append(f"operatingSystem eq '{platform}'")

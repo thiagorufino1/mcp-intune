@@ -48,3 +48,25 @@ def test_all_tools_have_intune_prefix():
     _register(fake)
     for name in fake.tools:
         assert name.startswith("intune_"), f"Tool '{name}' missing 'intune_' prefix"
+
+
+def test_action_tools_registered():
+    class FakeMCP:
+        def __init__(self):
+            self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+
+    fake = FakeMCP()
+    from mcp_intune.tools.device.action_tools import _register
+    _register(fake)
+    expected = {
+        "intune_request_sync", "intune_request_restart", "intune_request_scan",
+        "intune_request_locate", "intune_request_retire", "intune_request_wipe",
+        "intune_request_delete", "intune_list_pending_actions",
+        "intune_approve_action", "intune_deny_action", "intune_execute_action",
+    }
+    assert expected.issubset(fake.tools.keys())

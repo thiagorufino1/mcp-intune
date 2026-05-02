@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-intune"
+version = "0.1.0"
+description = "MCP server for Microsoft Intune support and operations"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=2.0",
+    "httpx>=0.27",
+    "msal>=1.28",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "tenacity>=8.3",
+    "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+mcp-intune = "mcp_intune.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_intune"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100

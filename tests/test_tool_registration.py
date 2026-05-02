@@ -70,3 +70,23 @@ def test_action_tools_registered():
         "intune_approve_action", "intune_deny_action", "intune_execute_action",
     }
     assert expected.issubset(fake.tools.keys())
+
+
+def test_reporting_tools_registered():
+    class FakeMCP:
+        def __init__(self):
+            self.tools = {}
+        def tool(self, name=None, annotations=None):
+            def decorator(fn):
+                self.tools[name] = fn
+                return fn
+            return decorator
+
+    fake = FakeMCP()
+    from mcp_intune.tools.reporting.reporting_tools import _register
+    _register(fake)
+    expected = {
+        "intune_export_report", "intune_get_report_status", "intune_list_report_catalog",
+        "intune_get_audit_events", "intune_get_endpoint_analytics",
+    }
+    assert expected.issubset(fake.tools.keys())

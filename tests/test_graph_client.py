@@ -153,3 +153,11 @@ async def test_graph_delete_calls_delete_method():
         call_args = mock_req.call_args
         assert call_args[0][0] == "DELETE"
         assert "abc-123" in call_args[0][1]
+
+
+@pytest.mark.asyncio
+async def test_graph_delete_raises_for_beta_path():
+    from mcp_intune.graph.errors import BetaApiNotAllowedError
+    from mcp_intune.graph.client import graph_delete
+    with pytest.raises(BetaApiNotAllowedError):
+        await graph_delete("beta/deviceManagement/deviceHealthScripts/abc")

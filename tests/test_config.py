@@ -6,3 +6,8 @@ def test_settings_loads_from_env():
     assert settings.allow_beta_apis is False
     assert settings.graph_default_top == 50
     assert settings.cache_ttl_device == 60
+
+
+def test_approval_ttl_seconds_default():
+    from mcp_intune.config import settings
+    assert settings.approval_ttl_seconds == 3600

@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     cache_ttl_policy: int = 120
     cache_ttl_app: int = 300
 
+    approval_ttl_seconds: int = 3600
+
     graph_timeout_connect: float = 10.0
     graph_timeout_read: float = 30.0
     graph_max_retries: int = 4

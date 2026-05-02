@@ -29,6 +29,13 @@ def graph_error_response(exc: Exception, context: str = "") -> dict[str, Any]:
             "data": None,
             "meta": meta,
         }
+    if isinstance(exc, ServiceUnavailableError):
+        return {
+            "status": "error",
+            "errors": [f"Graph service unavailable{ctx}. Retry later."],
+            "data": None,
+            "meta": meta,
+        }
     if isinstance(exc, BetaApiNotAllowedError):
         return {"status": "error", "errors": [str(exc)], "data": None, "meta": {**meta, "api_version": "beta"}}
     if isinstance(exc, GraphError):

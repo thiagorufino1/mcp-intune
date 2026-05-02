@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 import structlog
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import RetryCallState, retry, retry_if_exception_type, stop_after_attempt
 
 from mcp_intune.config import settings
 from mcp_intune.graph.errors import (
@@ -60,7 +60,7 @@ def clear_cache() -> None:
 
 
 def _assert_beta_allowed(path: str) -> None:
-    if "/beta/" in path and not settings.allow_beta_apis:
+    if path.lstrip("/").startswith("beta/") and not settings.allow_beta_apis:
         raise BetaApiNotAllowedError(path)
 
 
@@ -95,15 +95,23 @@ def _raise_for_status(response: httpx.Response) -> None:
     response.raise_for_status()
 
 
+def _retry_wait(retry_state: RetryCallState) -> float:
+    exc = retry_state.outcome.exception() if retry_state.outcome else None
+    if isinstance(exc, ThrottlingError):
+        return float(exc.retry_after_seconds)
+    attempt = retry_state.attempt_number
+    return min(2 ** attempt * 2, 30)
+
+
 @retry(
     retry=retry_if_exception_type((ThrottlingError, ServiceUnavailableError)),
     stop=stop_after_attempt(settings.graph_max_retries),
-    wait=wait_exponential(multiplier=2, max=30),
+    wait=_retry_wait,
     reraise=True,
 )
-async def _do_request(method: str, url: str, json: Any = None) -> Any:
+async def _do_request(method: str, url: str, json: Any = None, params: dict[str, Any] | None = None) -> Any:
     start = time.monotonic()
-    response = await _get_http_client().request(method, url, headers=_headers(), json=json)
+    response = await _get_http_client().request(method, url, headers=_headers(), json=json, params=params)
     elapsed_ms = int((time.monotonic() - start) * 1000)
     logger.debug("graph_request", method=method, status=response.status_code, elapsed_ms=elapsed_ms)
     _raise_for_status(response)
@@ -119,39 +127,40 @@ async def _get_or_create_lock(cache_key: str) -> asyncio.Lock:
 
 async def graph_get(path: str, params: dict[str, Any] | None = None, ttl: int = 60) -> Any:
     _assert_beta_allowed(path)
-    url = f"{GRAPH_BASE}/{path.lstrip('/')}"
-    if params:
-        url += "?" + "&".join(f"{k}={v}" for k, v in params.items())
+    base_url = f"{GRAPH_BASE}/{path.lstrip('/')}"
+    # Use httpx to normalize the cache key (handles encoding consistently)
+    cache_key = str(_get_http_client().build_request("GET", base_url, params=params).url)
 
     now = time.monotonic()
-    if url in _cache:
-        data, expires_at = _cache[url]
+    if cache_key in _cache:
+        data, expires_at = _cache[cache_key]
         if now < expires_at:
-            logger.debug("graph_cache_hit", url=url)
+            logger.debug("graph_cache_hit", url=cache_key)
             return data
 
-    lock = await _get_or_create_lock(url)
+    lock = await _get_or_create_lock(cache_key)
     async with lock:
-        if url in _cache:
-            data, expires_at = _cache[url]
-            if now < expires_at:
+        if cache_key in _cache:
+            data, expires_at = _cache[cache_key]
+            if time.monotonic() < expires_at:  # fresh timestamp inside lock
                 return data
-        result = await _do_request("GET", url)
-        _cache[url] = (result, time.monotonic() + ttl)
+        result = await _do_request("GET", base_url, params=params)
+        _cache[cache_key] = (result, time.monotonic() + ttl)
         return result
 
 
 async def graph_get_all_pages(path: str, params: dict[str, Any] | None = None) -> list[Any]:
     _assert_beta_allowed(path)
-    url = f"{GRAPH_BASE}/{path.lstrip('/')}"
-    if params:
-        url += "?" + "&".join(f"{k}={v}" for k, v in params.items())
-
+    base_url = f"{GRAPH_BASE}/{path.lstrip('/')}"
     items: list[Any] = []
-    while url:
-        payload = await _do_request("GET", url)
+    # First page uses params (httpx encodes); subsequent nextLink URLs are already fully formed
+    payload = await _do_request("GET", base_url, params=params)
+    items.extend(payload.get("value", []))
+    next_url: str | None = payload.get("@odata.nextLink")
+    while next_url:
+        payload = await _do_request("GET", next_url)
         items.extend(payload.get("value", []))
-        url = payload.get("@odata.nextLink")  # type: ignore[assignment]
+        next_url = payload.get("@odata.nextLink")
     return items
 
 
@@ -161,9 +170,8 @@ async def graph_get_paged(
     _assert_beta_allowed(path)
     effective_top = top or settings.graph_default_top
     merged: dict[str, Any] = {**(params or {}), "$top": effective_top}
-    url = f"{GRAPH_BASE}/{path.lstrip('/')}?" + "&".join(f"{k}={v}" for k, v in merged.items())
-
-    payload = await _do_request("GET", url)
+    base_url = f"{GRAPH_BASE}/{path.lstrip('/')}"
+    payload = await _do_request("GET", base_url, params=merged)
     return {
         "value": payload.get("value", []),
         "has_more": "@odata.nextLink" in payload,
@@ -181,6 +189,6 @@ async def graph_post(path: str, body: dict[str, Any]) -> Any:
 def build_batch(requests_list: list[dict[str, Any]]) -> dict[str, Any]:
     if len(requests_list) > 20:
         raise ValueError(
-            f"Microsoft Graph suporta até 20 requests por batch, recebeu {len(requests_list)}"
+            f"Microsoft Graph supports up to 20 requests per batch, got {len(requests_list)}"
         )
     return {"requests": requests_list}

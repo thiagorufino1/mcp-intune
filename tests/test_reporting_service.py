@@ -78,3 +78,23 @@ async def test_get_audit_events_with_actor_filter():
         await get_audit_events(days=7, actor_upn="admin@empresa.com")
         call_params = str(mock_get.call_args)
         assert "admin@empresa.com" in call_params
+
+
+ANALYTICS_STUB = {
+    "id": "summary",
+    "overallScore": 72,
+    "startupPerformanceScore": 81,
+    "appReliabilityScore": 68,
+    "workFromAnywhereScore": 75,
+}
+
+
+@pytest.mark.asyncio
+async def test_get_endpoint_analytics_summary_returns_scores():
+    with patch("mcp_intune.services.reporting.analytics_service.graph_get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = ANALYTICS_STUB
+        from mcp_intune.services.reporting.analytics_service import get_endpoint_analytics_summary
+        result = await get_endpoint_analytics_summary()
+        assert result["overallScore"] == 72
+        call_path = mock_get.call_args[0][0]
+        assert "userExperienceAnalytics" in call_path

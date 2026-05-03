@@ -66,6 +66,9 @@ async def execute_approved_action(request_id: str) -> dict[str, Any]:
         await graph_post(f"{DEVICE_BASE}/{device_id}/wipe", req.action_params)
     elif op == "delete":
         await graph_delete(f"{DEVICE_BASE}/{device_id}")
+    elif op == "run_remediation":
+        from mcp_intune.services.scripts.remediation_service import execute_remediation_run
+        await execute_remediation_run(req.action_params["scriptId"], req.device_id)
     else:
         raise ValueError(f"Unknown operation: {op}")
 

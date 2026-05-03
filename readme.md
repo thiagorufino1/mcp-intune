@@ -218,7 +218,7 @@ Permissões de aplicativo necessárias:
 
 ## ⚠️ Limitações Conhecidas
 
-- **V1 somente leitura**: operações de escrita, ações remotas e remediações estão planejadas para V2.
+- **Operações destrutivas requerem aprovação**: retire, wipe, delete, LAPS secret, BitLocker key e remediação on-demand passam obrigatoriamente pelo workflow de aprovação antes da execução.
 - **Beta APIs desabilitadas por padrão**: endpoints `/beta` requerem `ALLOW_BETA_APIS=true` e feature flags explícitas.
 - **Paginação de apps detectados**: `intune_get_detected_apps` busca todas as páginas em sequência — pode ser lento em dispositivos com muitos softwares.
 - **Cache por TTL**: dados de dispositivo têm TTL de 60s. Para dados em tempo real após ação manual no portal, aguarde expiração do cache ou reinicie o servidor.

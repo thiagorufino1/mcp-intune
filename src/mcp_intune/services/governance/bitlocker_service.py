@@ -11,7 +11,8 @@ async def find_bitlocker_keys(device_id: str | None = None) -> dict[str, Any]:
     """Returns key metadata WITHOUT the actual key value (requires BitlockerKey.ReadBasic.All)."""
     params: dict[str, Any] = {"$select": "id,createdDateTime,volumeType,deviceId"}
     if device_id:
-        params["$filter"] = f"deviceId eq '{device_id}'"
+        safe_device_id = device_id.replace("'", "''")
+        params["$filter"] = f"deviceId eq '{safe_device_id}'"
     return await graph_get(BITLOCKER_BASE, params=params, ttl=120)
 
 

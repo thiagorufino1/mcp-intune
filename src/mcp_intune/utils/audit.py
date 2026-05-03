@@ -16,7 +16,8 @@ def audited(fn: Callable) -> Callable:
         trace_id = str(uuid.uuid4())[:8]
         token = _trace_id.set(trace_id)
         tool_name = fn.__name__
-        safe_kwargs = {k: v for k, v in kwargs.items() if k not in ("ctx",)}
+        _SENSITIVE_KEYS = {"ctx", "hardware_hash"}
+        safe_kwargs = {k: v for k, v in kwargs.items() if k not in _SENSITIVE_KEYS}
         logger.info("tool_invoked", tool=tool_name, trace_id=trace_id, params=safe_kwargs)
         start = time.monotonic()
         try:

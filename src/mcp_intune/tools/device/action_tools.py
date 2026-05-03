@@ -221,7 +221,7 @@ def _register(mcp: fastmcp.FastMCP) -> None:
             result = graph_error_response(exc, context=f"approve request '{request_id}'")
         return render_response(result, response_format)
 
-    @mcp.tool(name="intune_deny_action", annotations={**_READ_ANNOTATIONS, "title": "Deny Pending Action"})
+    @mcp.tool(name="intune_deny_action", annotations={**_SAFE_ANNOTATIONS, "title": "Deny Pending Action"})
     @audited
     async def intune_deny_action(
         request_id: str,

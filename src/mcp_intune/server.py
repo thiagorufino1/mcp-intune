@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 import fastmcp
 import structlog
 
+from mcp_intune.config import settings
 from mcp_intune.graph.client import _get_http_client
 from mcp_intune.logging_config import configure_logging
 from mcp_intune.tools.device import device_tools, action_tools, bulk_tools
@@ -21,7 +22,7 @@ logger = structlog.get_logger()
 
 @asynccontextmanager
 async def _lifespan(server: fastmcp.FastMCP) -> AsyncGenerator[None, None]:
-    logger.info("server_starting", transport=os.getenv("FASTMCP_TRANSPORT", "http"))
+    logger.info("server_starting", transport=settings.fastmcp_transport)
     yield
     client = _get_http_client()
     try:
@@ -44,9 +45,9 @@ autopatch_tools._register(mcp)
 
 
 def main() -> None:
-    transport = os.getenv("FASTMCP_TRANSPORT", "http")
-    host = os.getenv("FASTMCP_HOST", "127.0.0.1")
-    port = int(os.getenv("FASTMCP_PORT", "8000"))
+    transport = settings.fastmcp_transport
+    host = settings.fastmcp_host
+    port = settings.fastmcp_port
     if transport == "http":
         mcp.run(transport=transport, host=host, port=port)
     else:

@@ -1,11 +1,11 @@
 import logging
-import os
 import structlog
+from mcp_intune.config import settings
 
 
 def configure_logging() -> None:
-    log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-    log_format = os.getenv("LOG_FORMAT", "json")
+    log_level = settings.log_level.upper()
+    log_format = settings.log_format
 
     processors: list = [
         structlog.contextvars.merge_contextvars,

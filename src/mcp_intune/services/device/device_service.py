@@ -113,7 +113,8 @@ async def get_compliance_state(device_id: str) -> dict[str, Any]:
 async def get_policy_status(device_id: str, policy_type: str | None = None) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if policy_type:
-        params["$filter"] = f"platformType eq '{policy_type}'"
+        safe_policy_type = policy_type.replace("'", "''")
+        params["$filter"] = f"platformType eq '{safe_policy_type}'"
 
     result = await graph_get(
         f"{DEVICE_BASE}/{device_id}/deviceConfigurationStates",

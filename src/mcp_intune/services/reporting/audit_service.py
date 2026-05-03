@@ -15,9 +15,11 @@ async def get_audit_events(
     since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
     filter_parts = [f"activityDateTime gt {since}"]
     if actor_upn:
-        filter_parts.append(f"actor/userPrincipalName eq '{actor_upn}'")
+        safe_upn = actor_upn.replace("'", "''")
+        filter_parts.append(f"actor/userPrincipalName eq '{safe_upn}'")
     if category:
-        filter_parts.append(f"category eq '{category}'")
+        safe_category = category.replace("'", "''")
+        filter_parts.append(f"category eq '{safe_category}'")
     params = {
         "$filter": " and ".join(filter_parts),
         "$orderby": "activityDateTime desc",

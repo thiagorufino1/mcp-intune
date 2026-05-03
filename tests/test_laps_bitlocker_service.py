@@ -48,7 +48,7 @@ async def test_execute_laps_secret_calls_graph_with_select_credentials():
     )
     await store.decide(req.request_id, approve=True)
     with patch("mcp_intune.services.governance.laps_service.graph_get", new_callable=AsyncMock) as mock_get:
-        mock_get.return_value = {**LAPS_METADATA_STUB, "credentials": [{"accountName": "Administrator", "password": "SecretP@ss1"}]}
+        mock_get.return_value = {**LAPS_METADATA_STUB, "credentials": [{"accountName": "Administrator", "password": "<redacted>"}]}
         from mcp_intune.services.governance.laps_service import execute_laps_secret
         result = await execute_laps_secret(req.request_id)
         assert result["credentials"] is not None

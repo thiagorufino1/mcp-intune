@@ -11,6 +11,7 @@ async def list_autopilot_devices(top: int | None = None) -> dict[str, Any]:
     return await graph_get_paged(AUTOPILOT_BASE, params=params, top=top)
 
 
+# TODO: expose as intune_get_autopilot_device tool
 async def get_autopilot_device(device_identity_id: str) -> dict[str, Any]:
     return await graph_get(f"{AUTOPILOT_BASE}/{device_identity_id}", params={"$select": SELECT}, ttl=120)
 

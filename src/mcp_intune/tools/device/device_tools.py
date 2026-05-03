@@ -103,18 +103,20 @@ def _register(mcp: fastmcp.FastMCP) -> None:
     @audited
     async def intune_get_detected_apps(
         device_id: str,
+        max_items: int = 200,
         response_format: ResponseFormat = ResponseFormat.MARKDOWN,
     ) -> str:
-        """Get all software detected on a managed device (full paginated list).
+        """Get all software detected on a managed device.
 
         USE: When user asks about installed apps, software inventory, or needs to verify if specific software is present.
-        Note: May return hundreds of items — consider filtering by name client-side.
+        Note: Returns up to max_items results. Set max_items=0 for unlimited (slow on large devices).
 
         Args:
             device_id: Intune managedDeviceId (GUID).
+            max_items: Max number of apps to return (default 200, 0=unlimited).
         """
         try:
-            result = await device_service.get_detected_apps(device_id)
+            result = await device_service.get_detected_apps(device_id, max_items)
         except Exception as exc:
             result = graph_error_response(exc, context=f"device '{device_id}'")
         return render_response(result, response_format)

@@ -215,7 +215,7 @@ def _register(mcp: fastmcp.FastMCP) -> None:
                     "status": req.status,
                     "operation": req.operation,
                     "device_id": req.device_id,
-                    "next_step": "Call intune_execute_action to run the approved action",
+                    "next_step": "Call intune_execute_action to run the approved action (works for all operation types including laps_secret and bitlocker_key)",
                 }
         except Exception as exc:
             result = graph_error_response(exc, context=f"approve request '{request_id}'")

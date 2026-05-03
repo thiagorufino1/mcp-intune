@@ -17,5 +17,6 @@ async def list_updatable_assets(top: int | None = None) -> dict[str, Any]:
     return await graph_get_paged(f"{AUTOPATCH_BASE}/updatableAssets", top=top)
 
 
+# TODO: expose as intune_list_catalog_entries tool
 async def list_catalog_entries(top: int | None = None) -> dict[str, Any]:
     return await graph_get_paged(f"{AUTOPATCH_BASE}/catalog/entries", top=top)

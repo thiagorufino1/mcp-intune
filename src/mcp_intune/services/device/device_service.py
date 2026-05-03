@@ -65,7 +65,7 @@ async def get_device_overview(device_id: str, include: list[str] | None = None) 
             ttl=settings.cache_ttl_policy,
         )
     if "detectedApps" in include:
-        coroutines["detected_apps"] = graph_get_all_pages(f"{DEVICE_BASE}/{device_id}/detectedApps")
+        coroutines["detected_apps"] = get_detected_apps(device_id)
 
     extras: dict[str, Any] = {}
     if coroutines:
@@ -88,8 +88,31 @@ async def get_device_users(device_id: str) -> dict[str, Any]:
     return await graph_get(f"{DEVICE_BASE}/{device_id}/users", ttl=settings.cache_ttl_device)
 
 
-async def get_detected_apps(device_id: str) -> list[Any]:
-    return await graph_get_all_pages(f"{DEVICE_BASE}/{device_id}/detectedApps")
+async def get_detected_apps(device_id: str, max_items: int = 200) -> dict[str, Any]:
+    from mcp_intune.graph.client import graph_get_paged, graph_get_all_pages
+    if max_items <= 0:
+        items = await graph_get_all_pages(f"{DEVICE_BASE}/{device_id}/detectedApps")
+        return {"items": items, "count": len(items), "has_more": False}
+
+    result = await graph_get_paged(
+        f"{DEVICE_BASE}/{device_id}/detectedApps",
+        params={"$select": "id,displayName,version,publisher"},
+        top=min(max_items, settings.graph_default_top),
+    )
+    # If has_more, keep fetching until max_items
+    items = list(result.get("value", []))
+    next_cursor = result.get("next_cursor")
+    while next_cursor and len(items) < max_items:
+        from mcp_intune.graph.client import _do_request
+        payload = await _do_request("GET", next_cursor)
+        items.extend(payload.get("value", [])[:max_items - len(items)])
+        next_cursor = payload.get("@odata.nextLink")
+
+    return {
+        "items": items,
+        "count": len(items),
+        "has_more": bool(next_cursor and len(items) >= max_items),
+    }
 
 
 async def get_compliance_state(device_id: str) -> dict[str, Any]:

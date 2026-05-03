@@ -90,13 +90,18 @@ async def test_get_device_users_calls_users_endpoint():
 
 @pytest.mark.asyncio
 async def test_get_detected_apps_returns_all_pages():
-    with patch("mcp_intune.services.device.device_service.graph_get_all_pages", new_callable=AsyncMock) as mock_pages:
-        mock_pages.return_value = DETECTED_APPS_STUB
+    with patch("mcp_intune.graph.client.graph_get_paged", new_callable=AsyncMock) as mock_paged:
+        mock_paged.return_value = {
+            "value": DETECTED_APPS_STUB,
+            "has_more": False,
+            "next_cursor": None,
+            "total_count": None,
+        }
         from mcp_intune.services.device.device_service import get_detected_apps
         result = await get_detected_apps("abc-123")
-        assert len(result) == 2
-        assert result[0]["displayName"] == "Chrome"
-        call_path = mock_pages.call_args[0][0]
+        assert result["count"] == 2
+        assert result["items"][0]["displayName"] == "Chrome"
+        call_path = mock_paged.call_args[0][0]
         assert "detectedApps" in call_path
 
 

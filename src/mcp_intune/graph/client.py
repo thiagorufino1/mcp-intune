@@ -64,9 +64,9 @@ def _assert_beta_allowed(path: str) -> None:
         raise BetaApiNotAllowedError(path)
 
 
-def _headers() -> dict[str, str]:
+async def _headers() -> dict[str, str]:
     return {
-        "Authorization": f"Bearer {get_token()}",
+        "Authorization": f"Bearer {await get_token()}",
         "Accept": "application/json",
         "Content-Type": "application/json",
         "client-request-id": str(uuid.uuid4()),
@@ -111,7 +111,7 @@ def _retry_wait(retry_state: RetryCallState) -> float:
 )
 async def _do_request(method: str, url: str, json: Any = None, params: dict[str, Any] | None = None) -> Any:
     start = time.monotonic()
-    response = await _get_http_client().request(method, url, headers=_headers(), json=json, params=params)
+    response = await _get_http_client().request(method, url, headers=await _headers(), json=json, params=params)
     elapsed_ms = int((time.monotonic() - start) * 1000)
     logger.debug("graph_request", method=method, status=response.status_code, elapsed_ms=elapsed_ms)
     _raise_for_status(response)
@@ -195,6 +195,17 @@ async def graph_delete(path: str) -> dict[str, Any]:
     _assert_beta_allowed(path)
     url = f"{GRAPH_BASE}/{path.lstrip('/')}"
     return await _do_request("DELETE", url)
+
+
+async def _cache_cleanup_loop(interval_seconds: int = 300) -> None:
+    while True:
+        await asyncio.sleep(interval_seconds)
+        now = time.monotonic()
+        async with _get_cache_meta_lock():
+            expired_keys = [k for k, (_, exp) in _cache.items() if now >= exp]
+            for k in expired_keys:
+                del _cache[k]
+                _cache_locks.pop(k, None)
 
 
 def build_batch(requests_list: list[dict[str, Any]]) -> dict[str, Any]:

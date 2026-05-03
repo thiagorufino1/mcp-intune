@@ -1,3 +1,4 @@
+import asyncio
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -22,14 +23,23 @@ logger = structlog.get_logger()
 
 @asynccontextmanager
 async def _lifespan(server: fastmcp.FastMCP) -> AsyncGenerator[None, None]:
+    from mcp_intune.graph.client import _cache_cleanup_loop
     logger.info("server_starting", transport=settings.fastmcp_transport)
-    yield
-    client = _get_http_client()
+    cleanup_task = asyncio.create_task(_cache_cleanup_loop())
     try:
-        await client.aclose()
-    except Exception as exc:
-        logger.warning("http_client_close_error", error=str(exc))
-    logger.info("server_stopped")
+        yield
+    finally:
+        cleanup_task.cancel()
+        try:
+            await cleanup_task
+        except asyncio.CancelledError:
+            pass
+        client = _get_http_client()
+        try:
+            await client.aclose()
+        except Exception as exc:
+            logger.warning("http_client_close_error", error=str(exc))
+        logger.info("server_stopped")
 
 
 mcp = fastmcp.FastMCP("mcp-intune", lifespan=_lifespan)

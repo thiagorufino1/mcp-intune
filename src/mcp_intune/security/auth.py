@@ -1,3 +1,4 @@
+import asyncio
 import threading
 from msal import ConfidentialClientApplication
 from mcp_intune.config import settings
@@ -20,7 +21,7 @@ def _get_app() -> ConfidentialClientApplication:
     return _app
 
 
-def get_token() -> str:
+def _get_token_sync() -> str:
     app = _get_app()
     result = app.acquire_token_for_client(scopes=["https://graph.microsoft.com/.default"])
     if "access_token" not in result:
@@ -28,3 +29,8 @@ def get_token() -> str:
             f"Failed to acquire token: {result.get('error_description', result.get('error', 'unknown'))}"
         )
     return result["access_token"]
+
+
+async def get_token() -> str:
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, _get_token_sync)

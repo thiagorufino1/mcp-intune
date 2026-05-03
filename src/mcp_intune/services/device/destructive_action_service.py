@@ -69,6 +69,12 @@ async def execute_approved_action(request_id: str) -> dict[str, Any]:
     elif op == "run_remediation":
         from mcp_intune.services.scripts.remediation_service import execute_remediation_run
         await execute_remediation_run(req.action_params["scriptId"], req.device_id)
+    elif op == "laps_secret":
+        from mcp_intune.services.governance.laps_service import execute_laps_secret
+        return await execute_laps_secret(request_id)
+    elif op == "bitlocker_key":
+        from mcp_intune.services.governance.bitlocker_service import execute_bitlocker_key
+        return await execute_bitlocker_key(request_id)
     else:
         raise ValueError(f"Unknown operation: {op}")
 

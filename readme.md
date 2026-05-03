@@ -1,6 +1,6 @@
 # MCP Intune
 
-Servidor MCP para suporte, troubleshooting e operações do Microsoft Intune. Consulte dispositivos, compliance, políticas, aplicativos instalados e usuários via Microsoft Graph API. Projetado para diagnósticos de suporte e governança de endpoints. Zero operações de escrita na V1.
+Servidor MCP para suporte, troubleshooting e operações do Microsoft Intune. Consulte dispositivos, compliance, políticas, aplicativos instalados e usuários via Microsoft Graph API. Projetado para diagnósticos de suporte e governança de endpoints.
 
 ## 📂 Estrutura de Pastas
 
@@ -49,8 +49,7 @@ O projeto segue uma arquitetura em camadas, pensada para modularidade, clareza e
 
 ## 🛠️ Referência de Ferramentas
 
-Todas as ferramentas são apenas de **leitura** na V1.  
-Total atual: **34 ferramentas**.
+Total atual: **47 ferramentas**.
 
 ### 💻 Dispositivos
 
@@ -109,6 +108,28 @@ Total atual: **34 ferramentas**.
 - **`intune_list_autopilot_devices`**: lista identidades Autopilot com status de atribuição de perfil.
 - **`intune_get_autopilot_device_by_serial`**: encontra dispositivo Autopilot por número de série.
 - **`intune_import_autopilot_device`**: importa novo dispositivo para Autopilot via hardware hash.
+
+### 🔐 Governança e Operações Sensíveis
+
+- **`intune_get_laps_metadata`**: metadados do LAPS (data de rotação, conta). **Não retorna a senha**. Requer `DeviceLocalCredential.ReadBasic.All`.
+- **`intune_request_laps_secret`**: solicita a senha LAPS. **Requer aprovação**. Gera auditoria no Entra ID. Requer `DeviceLocalCredential.Read.All`.
+- **`intune_execute_laps_secret`**: recupera a senha LAPS após aprovação. Gera auditoria.
+- **`intune_find_bitlocker_keys`**: lista metadados de chaves BitLocker. **Não retorna o valor da chave**. Requer `BitlockerKey.ReadBasic.All`.
+- **`intune_request_bitlocker_key`**: solicita a chave de recuperação BitLocker. **Requer aprovação**. Gera auditoria. Requer `BitlockerKey.Read.All`.
+- **`intune_execute_bitlocker_key`**: recupera a chave BitLocker após aprovação. Gera auditoria.
+- **`intune_list_role_definitions`**: lista definições de roles RBAC do Intune (built-in e customizadas).
+- **`intune_list_role_assignments`**: lista assignments de roles com membros e scope tags.
+
+### ⚡ Ações em Massa
+
+- **`intune_bulk_sync`**: sync de até 20 dispositivos simultâneos via JSON batch.
+- **`intune_bulk_restart`**: restart de até 20 dispositivos simultâneos via JSON batch.
+
+### 🪟 Windows Autopatch
+
+- **`intune_list_autopatch_deployments`**: lista deployments do Windows Update for Business. Requer `WindowsUpdates.Read.All`.
+- **`intune_get_autopatch_deployment`**: detalhes de um deployment específico.
+- **`intune_list_updatable_assets`**: dispositivos registrados no Autopatch e erros de elegibilidade.
 
 ## 💻 Stack Tecnológica
 
@@ -188,6 +209,12 @@ Permissões de aplicativo necessárias:
 | `DeviceManagementManagedDevices.PrivilegedOperations.All` | Ações remotas (retire, wipe) |
 | `DeviceManagementScripts.Read.All` | Scripts e remediações |
 | `DeviceManagementServiceConfig.Read.All` | Autopilot |
+| `DeviceLocalCredential.ReadBasic.All` | Metadados LAPS |
+| `DeviceLocalCredential.Read.All` | Senha LAPS (geração de auditoria) |
+| `BitlockerKey.ReadBasic.All` | Metadados de chaves BitLocker |
+| `BitlockerKey.Read.All` | Chave de recuperação BitLocker (geração de auditoria) |
+| `DeviceManagementRBAC.Read.All` | Roles e assignments RBAC |
+| `WindowsUpdates.Read.All` | Windows Autopatch deployments |
 
 ## ⚠️ Limitações Conhecidas
 

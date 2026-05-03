@@ -56,6 +56,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
+## 2026-05-02 — V3: Governança, Operações Sensíveis e Autopatch
+
+### Added
+
+- **LAPS**: `intune_get_laps_metadata`, `intune_request_laps_secret`, `intune_execute_laps_secret` (approval + auditoria Entra ID)
+
+- **BitLocker**: `intune_find_bitlocker_keys`, `intune_request_bitlocker_key`, `intune_execute_bitlocker_key` (approval + auditoria Entra ID)
+
+- **Governança RBAC**: `intune_list_role_definitions` (filtro built-in), `intune_list_role_assignments`
+
+- **Ações em massa**: `intune_bulk_sync`, `intune_bulk_restart` (JSON batch, até 20 dispositivos)
+
+- **Windows Autopatch**: `intune_list_autopatch_deployments`, `intune_get_autopatch_deployment`, `intune_list_updatable_assets`
+
+### Changed
+
+- **Total de tools expostas: 47** (era 34 na V2b)
+
+### Security
+
+- LAPS e BitLocker: chave/senha nunca retornada sem aprovação explícita
+- Ambas operações geram auditoria no Microsoft Entra ID ao usar `$select=credentials/key`
+
+---
+
 ## 2026-05-02
 
 ### Added

@@ -45,7 +45,7 @@ O projeto segue uma arquitetura em camadas, pensada para modularidade, clareza e
    Autenticação app-only via MSAL com client credentials flow (client secret ou certificado).
 
 6. **Resiliência**  
-   Uso de `tenacity` para retry com backoff exponencial. Throttling com `Retry-After` respeitado. Cache TTL com prevenção de cache stampede via `asyncio.Lock` por chave.
+   Uso de `tenacity` para retry com backoff exponencial. Throttling com `Retry-After` respeitado. Cache TTL com prevenção de cache stampede via `asyncio.Lock` por chave. Cleanup automático de entradas expiradas via background task.
 
 ## 🛠️ Referência de Ferramentas
 
@@ -61,7 +61,7 @@ Total atual: **47 ferramentas**.
 
 - **`intune_get_device_users`**: usuários associados ao dispositivo (usuário primário e usuários logados).
 
-- **`intune_get_detected_apps`**: lista completa de softwares detectados no dispositivo (paginação automática). Pode retornar centenas de itens.
+- **`intune_get_detected_apps`**: lista softwares detectados no dispositivo. Parâmetro `max_items` (padrão 200) evita fan-out descontrolado. Retorna `has_more: true` quando há mais resultados.
 
 - **`intune_get_compliance_state`**: estado de compliance e lista de políticas de compliance com resultado por política (`compliant`, `nonCompliant`, `error`). Ideal para diagnóstico de não conformidade.
 

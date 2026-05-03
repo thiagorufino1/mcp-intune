@@ -4,6 +4,30 @@ Todas as mudanças relevantes deste projeto são documentadas aqui.
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
+## 2026-05-03 — Correções e Melhorias Pós-Análise
+
+### Fixed
+
+- **Bug crítico:** `execute_approved_action` não tratava `run_remediation` → levantava `ValueError`. Adicionado case que chama `execute_remediation_run` corretamente.
+- **OData injection:** `actor_upn` e `category` em `audit_service`, `policy_type` em `device_service`, `device_id` em `bitlocker_service` agora aplicam `.replace("'", "''")` antes de interpolação.
+- **`intune_deny_action`** annotation corrigida para `readOnlyHint: False` (modifica estado do approval store).
+- **`@audited`** passa a filtrar `hardware_hash` dos logs (dado sensível de identificação de dispositivo).
+- **`server.py` / `logging_config.py`** migrados de `os.getenv` para `settings.*` — fonte de verdade única via pydantic-settings.
+- **`get_detected_apps`** no `get_device_overview` migrado para chamar o service unificado ao invés de `graph_get_all_pages` diretamente.
+
+### Added
+
+- **`get_token` assíncrono:** MSAL agora executa via `run_in_executor` — não bloqueia o event loop asyncio durante renovação de token.
+- **Cache cleanup automático:** background task no lifespan purga entradas expiradas do cache a cada 5 minutos — previne memory leak em instâncias long-lived.
+- **`max_items` em `intune_get_detected_apps`:** padrão 200 com `has_more: true` quando há mais. Parâmetro `max_items=0` para busca ilimitada.
+- **`execute_approved_action` unificado:** rota `laps_secret` e `bitlocker_key` além de retire/wipe/delete/run_remediation — `intune_execute_action` funciona para todos os tipos.
+- **9 novos testes:** expiração de approval, run_remediation executado, OData injection com aspas simples, batch com falhas parciais, execute de LAPS/BitLocker com ID inexistente.
+
+### Changed
+
+- **TODOs marcados** nas funções de serviço sem tool exposta (`get_remediation`, `get_*_update_profile`, `get_role_definition`, `get_autopilot_device`, `list_catalog_entries`).
+- **Limitações conhecidas** no readme atualizadas para refletir estado real (V2+ já tem operações de escrita com aprovação).
+
 ---
 
 ## 2026-05-02 — V2: Ações Remotas, Approval Workflow e Reporting

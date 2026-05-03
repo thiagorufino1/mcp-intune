@@ -98,3 +98,26 @@ async def test_get_endpoint_analytics_summary_returns_scores():
         assert result["overallScore"] == 72
         call_path = mock_get.call_args[0][0]
         assert "userExperienceAnalytics" in call_path
+
+
+@pytest.mark.asyncio
+async def test_get_audit_events_escapes_single_quotes_in_actor_upn():
+    with patch("mcp_intune.services.reporting.audit_service.graph_get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = {"value": []}
+        from mcp_intune.services.reporting.audit_service import get_audit_events
+        await get_audit_events(days=7, actor_upn="o'malley@empresa.com")
+        call_params = str(mock_get.call_args)
+        # Should have escaped quote
+        assert "o''malley" in call_params
+        # Should NOT have unescaped single quote in filter
+        assert "o'malley" not in call_params.replace("o''malley", "")
+
+
+@pytest.mark.asyncio
+async def test_get_audit_events_escapes_single_quotes_in_category():
+    with patch("mcp_intune.services.reporting.audit_service.graph_get", new_callable=AsyncMock) as mock_get:
+        mock_get.return_value = {"value": []}
+        from mcp_intune.services.reporting.audit_service import get_audit_events
+        await get_audit_events(days=7, category="Device's")
+        call_params = str(mock_get.call_args)
+        assert "Device''s" in call_params

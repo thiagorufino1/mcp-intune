@@ -116,3 +116,17 @@ async def test_execute_bitlocker_key_fetches_key_with_select():
         assert "key" in result
         call_params = str(mock_get.call_args)
         assert "key" in call_params
+
+
+@pytest.mark.asyncio
+async def test_execute_laps_secret_raises_for_nonexistent_request():
+    from mcp_intune.services.governance.laps_service import execute_laps_secret
+    with pytest.raises(ValueError, match="not found"):
+        await execute_laps_secret("nonexistent-request-id")
+
+
+@pytest.mark.asyncio
+async def test_execute_bitlocker_key_raises_for_nonexistent_request():
+    from mcp_intune.services.governance.bitlocker_service import execute_bitlocker_key
+    with pytest.raises(ValueError, match="not found"):
+        await execute_bitlocker_key("nonexistent-request-id")

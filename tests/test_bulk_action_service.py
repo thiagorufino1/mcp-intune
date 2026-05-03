@@ -35,3 +35,20 @@ async def test_bulk_restart_builds_batch_with_reboot():
         result = await bulk_restart(["dev-1"])
         batch_body = mock_post.call_args[0][1]
         assert "rebootNow" in batch_body["requests"][0]["url"]
+
+
+@pytest.mark.asyncio
+async def test_bulk_sync_partial_failure_counts_correctly():
+    with patch("mcp_intune.services.device.bulk_action_service.graph_post", new_callable=AsyncMock) as mock_post:
+        mock_post.return_value = {
+            "responses": [
+                {"id": "1", "status": 204, "body": {}},
+                {"id": "2", "status": 429, "body": {"error": {"code": "TooManyRequests"}}},
+                {"id": "3", "status": 204, "body": {}},
+            ]
+        }
+        from mcp_intune.services.device.bulk_action_service import bulk_sync
+        result = await bulk_sync(["dev-1", "dev-2", "dev-3"])
+        assert result["total"] == 3
+        assert result["succeeded"] == 2
+        assert result["failed"] == 1

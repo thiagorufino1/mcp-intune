@@ -63,3 +63,35 @@ async def test_get_request_returns_none_for_unknown():
     from mcp_intune.approval import store
     result = await store.get_request("nonexistent-id")
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_list_pending_marks_expired_requests():
+    from mcp_intune.approval import store
+    from mcp_intune.approval.models import ApprovalStatus
+    from datetime import datetime, timezone, timedelta
+    store._store.clear()
+    req = await store.create_request(
+        "wipe", "dev-exp", "LAP-EXP", "Test expiry", "INC-EXP", "high",
+    )
+    # Force expiry by backdating expires_at
+    store._store[req.request_id].expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    pending = await store.list_pending()
+    assert not any(r.request_id == req.request_id for r in pending)
+    assert store._store[req.request_id].status == ApprovalStatus.EXPIRED
+
+
+@pytest.mark.asyncio
+async def test_decide_on_expired_request_returns_expired_status():
+    from mcp_intune.approval import store
+    from mcp_intune.approval.models import ApprovalStatus
+    from datetime import datetime, timezone, timedelta
+    store._store.clear()
+    req = await store.create_request(
+        "retire", "dev-exp2", "LAP-EXP2", "Test", "INC-EXP2", "medium",
+    )
+    store._store[req.request_id].expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+    result = await store.decide(req.request_id, approve=True, comment="Too late")
+    assert result.status == ApprovalStatus.EXPIRED
+    # Should NOT have been approved
+    assert result.status != ApprovalStatus.APPROVED
